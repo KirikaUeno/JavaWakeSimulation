@@ -5,14 +5,14 @@ import java.awt.event.ActionListener;
 
 public class UiLoop implements ActionListener {
 
-    private final MainPanel mainPanel;
+    private final PartSimulationMainPanel partSimulationMainPanel;
 
-    public UiLoop(MainPanel mainPanel) {
-        this.mainPanel = mainPanel;
+    public UiLoop(PartSimulationMainPanel partSimulationMainPanel) {
+        this.partSimulationMainPanel = partSimulationMainPanel;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        this.mainPanel.doOneLoop();
+        this.partSimulationMainPanel.doOneLoop();
     }
 }

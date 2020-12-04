@@ -6,8 +6,8 @@ import javax.swing.*;
 import java.awt.*;
 
 public class GraphPanel extends JPanel {
-    private int[] graphX;
-    private int[] graphY;
+    private double[] graphX;
+    private double[] graphY;
 
     public GraphPanel() {
         setPreferredSize(new Dimension(Constants.graphWight, Constants.graphHeight));
@@ -17,8 +17,8 @@ public class GraphPanel extends JPanel {
     }
 
     private void initializeVariables() {
-        this.graphX = new int[Constants.numberOfParticles];
-        this.graphY = new int[Constants.numberOfParticles];
+        this.graphX = new double[Constants.numberOfParticles];
+        this.graphY = new double[Constants.numberOfParticles];
     }
 
     @Override
@@ -42,12 +42,12 @@ public class GraphPanel extends JPanel {
         g2d.drawLine(Constants.graphWight/2, 0, Constants.graphWight/2, Constants.graphHeight);
 
         for (int i = 0; i < graphX.length; i++) {
-            g2d.drawLine(graphX[i] + Constants.graphWight / 2, graphY[i] + Constants.graphHeight / 2, graphX[i] + Constants.graphWight / 2, graphY[i] + Constants.graphHeight / 2);
+            g2d.drawLine((int)graphX[i] + Constants.graphWight / 2, -(int)graphY[i] + Constants.graphHeight / 2, (int)graphX[i] + Constants.graphWight / 2, -(int)graphY[i] + Constants.graphHeight / 2);
         }
         g2d.dispose();
     }
 
-    public void fillGraph(int[] ax, int[] ay) {
+    public void fillGraph(double[] ax, double[] ay) {
         graphX = ax;
         graphY = ay;
     }

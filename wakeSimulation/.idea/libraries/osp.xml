@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="osp">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../sources/osp.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

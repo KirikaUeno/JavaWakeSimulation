@@ -1,14 +1,14 @@
 package com.company;
 
-import com.ui.MainPanel;
+import com.ui.PartSimulationMainPanel;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 public class MainKeyListener extends KeyAdapter {
-    private final MainPanel board;
+    private final PartSimulationMainPanel board;
 
-    public MainKeyListener(MainPanel board) {
+    public MainKeyListener(PartSimulationMainPanel board) {
         this.board = board;
     }
 

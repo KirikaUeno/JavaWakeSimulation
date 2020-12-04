@@ -37,4 +37,6 @@ public abstract class Sprite {
     public int getX() {
         return this.x;
     }
+
+    public abstract void repaint();
 }
