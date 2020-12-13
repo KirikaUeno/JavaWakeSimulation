@@ -19,16 +19,18 @@ public class Constants {
     public static final String BACKGROUND_IMAGE_URL = "images/background.png";
 
 
-    public static final int updateSpeed = 10;
-    public static final double wake = 0;
+    public static final int updateSpeed = 20;
+    public static final double wake = 0.0005;
     public static final int numberOfParticles = 101;
-    public static final double timeStep = 1.0 / 1000;
-    //stepPartOfw0 - part of revolution period counted by one iteration - dont change! dont know how to handle it yet
-    public static final double stepPartOfw0 = 1;
-    public static final double xFreq = 0.8518751;
+    public static final double timeStep = 1.0 / 100;
+    public static final int numberOfw0ForUpdate = 2;
+    public static final double xFreq = 0.1818751;
+    public static final double zFreq = 0.0042751;
+    public static final double eta = 0.00058;
+    public static final double Zx = 0.05;
 
-    public static final int boxesNumber = 3;
+    public static final int boxesNumber = 33;
     public static final int currentSamples = 101;
-    public static final double currentSamplesStep = 0.1;
+    public static final double currentSamplesStep = 0.05;
     public static final double z0 = 2;
 }

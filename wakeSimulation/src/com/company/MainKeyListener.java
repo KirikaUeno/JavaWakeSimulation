@@ -18,6 +18,6 @@ public class MainKeyListener extends KeyAdapter {
     }
 
     public void keyPressed(KeyEvent e) {
-
+        if(e.getKeyCode()==39) board.doOneLoop();
     }
 }
