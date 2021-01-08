@@ -2,8 +2,6 @@ package com.ui;
 
 import com.company.Constants;
 import com.company.MainMouseListener;
-import com.image.Image;
-import com.image.ImageFactory;
 import com.objects.BoxOfPart;
 import org.opensourcephysics.numerics.Complex;
 import org.opensourcephysics.numerics.ComplexEigenvalueDecomposition;
@@ -29,6 +27,7 @@ public class CirculantsMainPanel extends JPanel {
     private double[][] wakeMatrix;
     private double[][] circulantMatrix;
     private final BoxOfPart[] boxes = new BoxOfPart[Constants.boxesNumber];
+    private double wake = 1;
     /**
      * Create panel and make reference to mainPanel to be able to swap modes. Calls initializeVariables().
      */
@@ -52,6 +51,10 @@ public class CirculantsMainPanel extends JPanel {
         Button swapToSimulation = new Button("swapToSimulation");
         swapToSimulation.addActionListener(e -> { this.timer.stop();
             mainFrame.swapToSimulation();});
+        TextField wakeField = new TextField("0.05");
+        wakeField.addActionListener(e -> this.wake = Double.parseDouble(wakeField.getText()));
+
+        JLabel wakeLabel = new JLabel("wake:");
 
         SpringLayout layout = new SpringLayout();
 
@@ -64,13 +67,20 @@ public class CirculantsMainPanel extends JPanel {
         layout.putConstraint(SpringLayout.HORIZONTAL_CENTER, swapToSimulation, Constants.boardWight/2, SpringLayout.WEST, this);
         layout.putConstraint(SpringLayout.NORTH, swapToSimulation, 5, SpringLayout.NORTH, this);
 
+        layout.putConstraint(SpringLayout.WEST, wakeLabel, 5, SpringLayout.EAST, calculateSpectra);
+        layout.putConstraint(SpringLayout.NORTH, wakeLabel, 5, SpringLayout.SOUTH, this);
+        layout.putConstraint(SpringLayout.WEST, wakeField, 5, SpringLayout.EAST, wakeLabel);
+        layout.putConstraint(SpringLayout.NORTH, wakeField, 5, SpringLayout.SOUTH, this);
+
+
         setLayout(layout);
 
         add(swapToSimulation);
         add(calculateSpectra);
         add(graphPanel);
+        add(wakeLabel);
+        add(wakeField);
 
-        ImageIcon backgroundImage = ImageFactory.createImage(Image.BACKGROUND);
         this.timer = new Timer(Constants.updateSpeed, e->doOneLoop());
 
         for(int i = 0; i<Constants.boxesNumber;i++){
@@ -92,7 +102,6 @@ public class CirculantsMainPanel extends JPanel {
      * Calculate eigenValues using osp and fill the main graphPanel, y derived by ws, x multiplied by wake.
      */
     private void calculateSpectra() {
-        ArrayList<Double> graphX = new ArrayList<>();
         ArrayList<ArrayList<Double>> graphY = new ArrayList<>();
         Complex[][] mainMatrix;
         Complex[] eigenValues = new Complex[Constants.boxesNumber];
@@ -101,15 +110,15 @@ public class CirculantsMainPanel extends JPanel {
         for(int j=0;j<Constants.currentSamples;j++){
             mainMatrix=makeMatrix(j*Constants.currentSamplesStep);
             ComplexEigenvalueDecomposition.eigen(mainMatrix,eigenValues,eigenVectors,isOk);
-            graphX.add(j*Constants.currentSamplesStep*Constants.wake);
             graphY.add(new ArrayList<>());
+            graphY.get(j).add(j*Constants.currentSamplesStep*wake);
             for(int i=0;i<Constants.boxesNumber;i++) {
                 graphY.get(j).add(eigenValues[i].re()/Constants.zFreq);
                 //System.out.println(eigenValues[i].re());
             }
             Collections.sort(graphY.get(j));
         }
-        graphPanel.fillGraph(graphX,graphY);
+        graphPanel.fillGraph(graphY);
         repaint();
     }
     /**
@@ -120,7 +129,7 @@ public class CirculantsMainPanel extends JPanel {
         for(int i=0;i<Constants.boxesNumber;i++){
             for(int j=0;j<Constants.boxesNumber;j++){
                 matrix1[i][j]=new Complex();
-                matrix1[i][j].set(Constants.wake*cur*wakeMatrix[i][j],-Constants.zFreq*circulantMatrix[i][j]);
+                matrix1[i][j].set(wake*cur*wakeMatrix[i][j],-Constants.zFreq*circulantMatrix[i][j]);
             }
         }
         return matrix1;
@@ -202,11 +211,6 @@ public class CirculantsMainPanel extends JPanel {
         }
         return tempMatrix;
     }
-
-    /*protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Toolkit.getDefaultToolkit().sync();
-    }*/
 
     public void doOneLoop() {
         update();

@@ -20,7 +20,6 @@ public class Constants {
 
 
     public static final int updateSpeed = 20;
-    public static final double wake = 0.0005;
     public static final int numberOfParticles = 101;
     public static final double timeStep = 1.0 / 100;
     public static final int numberOfw0ForUpdate = 2;

@@ -10,8 +10,11 @@ import java.util.ArrayList;
  * Has net without numbers.
  */
 public class GraphPanel extends ResizableJPanel {
-    private ArrayList<Double> graphX;
-    private ArrayList<ArrayList<Double>> graphY;
+    private ArrayList<ArrayList<Double>> graph;
+    private boolean canBeJoined = true;
+    private String xAxe="";
+    private String yAxe="";
+    public Button resetScales = new Button("reset scales");
 
     public GraphPanel(String name) {
         setPreferredSize(new Dimension(Constants.graphWight, Constants.graphHeight));
@@ -21,9 +24,7 @@ public class GraphPanel extends ResizableJPanel {
     }
 
     private void initializeVariables() {
-        this.graphX = new ArrayList<>();
-        this.graphY = new ArrayList<>();
-        Button resetScales = new Button("reset scales");
+        this.graph = new ArrayList<>();
         resetScales.addActionListener(e->{resetScales(); repaint();});
         add(resetScales);
     }
@@ -39,26 +40,26 @@ public class GraphPanel extends ResizableJPanel {
         g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         //сделать проверку: если при каждом i размер y одинакоывый, то соединять точки
         int count=0;
-        if(graphY.size()>0) count = graphY.get(0).size();
-        boolean canBeJoined = true;
-        for (int i = 0; i < graphX.size(); i++) {
-            if (count != graphY.get(i).size()) {
-                canBeJoined = false;
+        if(graph.size()>0) count = graph.get(0).size()-1;
+        boolean Joined = true;
+        for (ArrayList<Double> doubles : graph) {
+            if ((count+1) != doubles.size()) {
+                Joined = false;
                 break;
             }
         }
         int wight=this.getWidth();
         int height=this.getHeight();
-        if(canBeJoined){
-            for (int i = 0; i < graphX.size()-1; i++) {
-                for (int j=0;j<count;j++) {
-                    g2d.drawLine((int) (wight * (graphX.get(i) * scaleX + 0.5 + shiftX)), -(int) (height * (graphY.get(i).get(j) * scaleY - 0.5 + shiftY)), (int) (wight * (graphX.get(i+1) * scaleX + 0.5 + shiftX)), -(int) (height * (graphY.get(i+1).get(j) * scaleY - 0.5 + shiftY)));
+        if(Joined && canBeJoined){
+            for (int i = 0; i < graph.size()-1; i++) {
+                for (int j=1;j<count+1;j++) {
+                    g2d.drawLine((int) (wight * (graph.get(i).get(0) * scaleX + 0.5 + shiftX)), -(int) (height * (graph.get(i).get(j) * scaleY - 0.5 + shiftY)), (int) (wight * (graph.get(i+1).get(0) * scaleX + 0.5 + shiftX)), -(int) (height * (graph.get(i+1).get(j) * scaleY - 0.5 + shiftY)));
                 }
             }
         } else {
-            for (int i = 0; i < graphX.size(); i++) {
-                for (double y : graphY.get(i)) {
-                    g2d.drawLine((int) (wight * (graphX.get(i) * scaleX + 0.5 + shiftX)), -(int) (height * (y * scaleY - 0.5 + shiftY)), (int) (wight * (graphX.get(i) * scaleX + 0.5 + shiftX)), -(int) (height * (y * scaleY - 0.5 + shiftY)));
+            for (ArrayList<Double> point : graph) {
+                for (int j = 1; j < count + 1; j++) {
+                    g2d.drawLine((int) (wight * (point.get(0) * scaleX + 0.5 + shiftX)), -(int) (height * (point.get(j) * scaleY - 0.5 + shiftY)), (int) (wight * (point.get(0) * scaleX + 0.5 + shiftX)), -(int) (height * (point.get(j) * scaleY - 0.5 + shiftY)));
                 }
             }
         }
@@ -66,6 +67,7 @@ public class GraphPanel extends ResizableJPanel {
     }
 
     private void drawLines(Graphics g){
+        g.setFont(new Font("TimesRoman", Font.PLAIN, 10));
         double x1 = -(shiftX+0.5)/scaleX;
         double x2 = (0.5-shiftX)/scaleX;
         double y2 = (-shiftY+0.5)/scaleY;
@@ -121,6 +123,10 @@ public class GraphPanel extends ResizableJPanel {
                 g.drawString(str, (int) (wight * ((x0 + i * stepX) * scaleX + 0.5 + shiftX)) - g.getFontMetrics().stringWidth(str), -(int) (height * ((y0 + mid * stepY) * scaleY - 0.5 + shiftY)) + 15);
             }
         }
+        g.setFont(new Font("TimesRoman", Font.BOLD, 14));
+        g.drawString(xAxe,(Constants.boardWight - g.getFontMetrics().stringWidth(xAxe))-5, Constants.boardHeight / 2 + 15);
+        g.drawString(yAxe,(Constants.boardWight/2 - g.getFontMetrics().stringWidth(yAxe))-5, 15);
+
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         g2d.drawLine(0, -(int)(height* ((y0 + mid * stepY)*scaleY-0.5+shiftY)), wight, -(int)(height* ((y0 + mid * stepY)*scaleY-0.5+shiftY)));
@@ -137,8 +143,21 @@ public class GraphPanel extends ResizableJPanel {
         else return (int)(i+1);
     }
 
-    public void fillGraph(ArrayList<Double> ax, ArrayList<ArrayList<Double>> ay) {
-        graphX = ax;
-        graphY = ay;
+    public void fillGraph(ArrayList<ArrayList<Double>> ay) {
+        graph = ay;
+    }
+
+    public void setCanBeJoined(boolean can){
+        canBeJoined=can;
+    }
+    public void setIsCentred(boolean is){
+        isCentred=is;
+    }
+
+    public void setXAxe(String x){
+        xAxe=x;
+    }
+    public void setYAxe(String y){
+        yAxe=y;
     }
 }

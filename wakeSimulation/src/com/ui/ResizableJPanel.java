@@ -9,6 +9,7 @@ public class ResizableJPanel extends JPanel {
     protected int xf = 0;
     protected int yf = 0;
     protected boolean isRectExist=false;
+    protected boolean isCentred = false;
     private double scaleX0 = 1;
     private double scaleY0 = 1;
     private double shiftX0 = 0;
@@ -43,7 +44,15 @@ public class ResizableJPanel extends JPanel {
         if(((xf-xi)<-10) && ((yf-yi)<-10)){
             //setScales((scaleX *((xi-xf+0.0)/wight)),(scaleY *((yi-yf+0.0)/height)));
         }
-        repaint();
+        if(isCentred) {
+            shiftX = 0;
+            shiftY = 0;
+        }
+        xi = 0;
+        yi = 0;
+        xf = 0;
+        yf = 0;
+        //repaint();
     }
 
     protected void setScales(double scaleX, double scaleY){

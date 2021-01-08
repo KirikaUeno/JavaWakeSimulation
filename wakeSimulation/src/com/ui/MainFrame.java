@@ -18,14 +18,13 @@ public class MainFrame extends JFrame {
         setTitle(Constants.title);
         setIconImage(Objects.requireNonNull(ImageFactory.createImage(Image.ICON)).getImage());
 
-        partSimulationMainPanel=new PartSimulationMainPanel(this);
+        partSimulationMainPanel = new PartSimulationMainPanel(this);
         add(partSimulationMainPanel);
-
+        pack();
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
         setVisible(true);
-        pack();
     }
     /**
      * add circulants and remove partSimulation from mainPanel, but doesnt stop its processes. Be shure to stop all of them before

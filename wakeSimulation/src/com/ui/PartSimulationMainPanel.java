@@ -16,12 +16,13 @@ import java.util.ArrayList;
  * Panel for 1st operating mode of program. Fill whole field of application.
  * Sets array of particles with air-bag distribution in longitudinal and transverse dimensions.
  */
-public class PartSimulationMainPanel extends ResizableJPanel {
+public class PartSimulationMainPanel extends JPanel {
     private Timer timer;
 
     private ImageIcon backgroundImage;
 
     private final JLabel label = new JLabel();
+    private final GraphPanel partPanel = new GraphPanel("partPanel");
     private final GraphPanel panel1 = new GraphPanel("panel1");
     private final GraphPanel panel2 = new GraphPanel("panel2");
     private final MainFrame mainFrame;
@@ -34,7 +35,7 @@ public class PartSimulationMainPanel extends ResizableJPanel {
     private final Choice showY = new Choice();
 
     private final ArrayList<Double> pickUpD= new ArrayList<>();
-    private final ArrayList<Double> pickUpW = new ArrayList<>();
+    private double wake=0.0005;
 
     private int fourierMode = 0;
 
@@ -44,24 +45,24 @@ public class PartSimulationMainPanel extends ResizableJPanel {
      */
     public PartSimulationMainPanel(MainFrame mainFrame) {
         setPreferredSize(new Dimension(Constants.boardWight, Constants.boardHeight));
+
         addKeyListener(new MainKeyListener(this));
-        MainMouseListener mainMouseListener = new MainMouseListener(this);
+
+        MainMouseListener mainMouseListener = new MainMouseListener(partPanel);
         MainMouseListener panel1MouseListener = new MainMouseListener(panel1);
         MainMouseListener panel2MouseListener = new MainMouseListener(panel2);
-        addMouseListener(mainMouseListener);
-        addMouseMotionListener(mainMouseListener);
+
+        partPanel.addMouseListener(mainMouseListener);
+        partPanel.addMouseMotionListener(mainMouseListener);
         panel2.addMouseListener(panel2MouseListener);
         panel2.addMouseMotionListener(panel2MouseListener);
         panel1.addMouseListener(panel1MouseListener);
         panel1.addMouseMotionListener(panel1MouseListener);
+
         setFocusable(true);
         setName("partMainPanel");
-        panel2.setName("panel2");
-        panel1.setName("panel1");
 
         this.mainFrame = mainFrame;
-        this.setScaleX(10);
-        this.setScaleY(10);
         initializeVariables();
     }
     /**
@@ -76,6 +77,7 @@ public class PartSimulationMainPanel extends ResizableJPanel {
         Button calculateSpectra = new Button("spectra");
         Button countSimulation = new Button("spectrum count");
         Button switchFourierMode = new Button("switch");
+        TextField wakeField = new TextField("0.0005");
 
         swapToCirculants.addActionListener(e -> { this.timer.stop();this.mainFrame.swapToCirculants();});
         start.addActionListener(e -> this.timer.start());
@@ -84,18 +86,25 @@ public class PartSimulationMainPanel extends ResizableJPanel {
         calculateSpectra.addActionListener(e -> calculateSpectra());
         countSimulation.addActionListener(e -> countSpectra());
         switchFourierMode.addActionListener(e -> switchFourierMode());
+        wakeField.addActionListener(e -> this.wake = Double.parseDouble(wakeField.getText()));
 
         showX.add("x"); showX.add("px c/wb"); showX.add("z"); showX.add("d eta c/wb");
         showY.add("x"); showY.add("px c/wb"); showY.add("z"); showY.add("d eta c/wb");
+        showX.addItemListener(e -> { for (Particle part: particles) {part.setXAxe(showX.getSelectedItem());} partPanel.setXAxe(showX.getSelectedItem()); repaintParticles(); repaint();});
+        showY.addItemListener(e -> { for (Particle part: particles) {part.setYAxe(showY.getSelectedItem());} partPanel.setYAxe(showY.getSelectedItem()); repaintParticles(); repaint();});
         showX.select("z");
         showY.select("x");
-        showX.addItemListener(e -> { for (Particle part: particles) {part.setXAxe(showX.getSelectedItem());}repaintParticles(); repaint();});
-        showY.addItemListener(e -> { for (Particle part: particles) {part.setYAxe(showY.getSelectedItem());}repaintParticles(); repaint();});
+        partPanel.setXAxe(showX.getSelectedItem());
+        partPanel.setYAxe(showY.getSelectedItem());
 
         label.setText("");
 
+        JLabel wakeLabel = new JLabel("wake:");
+
         SpringLayout layout = new SpringLayout();
 
+        layout.putConstraint(SpringLayout.EAST, partPanel, 0, SpringLayout.EAST, this);
+        layout.putConstraint(SpringLayout.SOUTH, partPanel, 0, SpringLayout.SOUTH, this);
         layout.putConstraint(SpringLayout.EAST, panel1, -5, SpringLayout.EAST, this);
         layout.putConstraint(SpringLayout.NORTH, panel1, -5, SpringLayout.NORTH, this);
         layout.putConstraint(SpringLayout.EAST, panel2, -5, SpringLayout.EAST, this);
@@ -126,20 +135,31 @@ public class PartSimulationMainPanel extends ResizableJPanel {
         layout.putConstraint(SpringLayout.WEST, switchFourierMode, 5, SpringLayout.EAST, countSimulation);
         layout.putConstraint(SpringLayout.NORTH, switchFourierMode, 5, SpringLayout.NORTH, this);
 
+        layout.putConstraint(SpringLayout.WEST, wakeLabel, 5, SpringLayout.EAST, swapToCirculants);
+        layout.putConstraint(SpringLayout.NORTH, wakeLabel, 5, SpringLayout.SOUTH, start);
+        layout.putConstraint(SpringLayout.WEST, wakeField, 5, SpringLayout.EAST, wakeLabel);
+        layout.putConstraint(SpringLayout.NORTH, wakeField, 5, SpringLayout.SOUTH, start);
+
+        layout.putConstraint(SpringLayout.NORTH, partPanel.resetScales, 5, SpringLayout.SOUTH, this);
+
         setLayout(layout);
+        partPanel.setLayout(layout);
 
         add(swapToCirculants);
-        add(label);
-        add(panel1);
-        add(panel2);
         add(start);
         add(stop);
         add(doOneStep);
         add(calculateSpectra);
         add(countSimulation);
-        add(showX);
-        add(showY);
+        partPanel.add(showX);
+        partPanel.add(showY);
         add(switchFourierMode);
+        partPanel.add(wakeLabel);
+        add(wakeField);
+        partPanel.add(label);
+        partPanel.add(panel1);
+        partPanel.add(panel2);
+        add(partPanel);
 
         this.particles = new Particle[Constants.numberOfParticles];
         for (int i = 0; i < Constants.numberOfParticles; i++) {
@@ -154,82 +174,15 @@ public class PartSimulationMainPanel extends ResizableJPanel {
 
         panel2.setPreferredSize(new Dimension(500, 400));
         panel2.setScaleX(1);
-        panel2.setScaleY(1);
-        panel2.setShiftX(-0.5);
-        panel2.setShiftY(-0.5);
-        panel2.setScaleX(1);
         panel2.setScaleY(0.04);
         panel2.setShiftX(-0.5);
         panel2.setShiftY(0.3);
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        g.drawImage(backgroundImage.getImage(), 0, 0, null);
-        super.paintComponent(g);
-        doDrawing(g);
-    }
-    /**
-     * Draw axes, net, particles, changing-scales rectangle
-     */
-    protected void doDrawing(Graphics g) {
-        drawNet(g);
-
-        Graphics2D g2d = (Graphics2D) g.create();
-        g2d.setStroke(new BasicStroke(3, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        for (Particle part : particles) {
-            g2d.drawLine((int) ((part.x)*scaleX+Constants.boardWight/2), (int) (-(part.y)*scaleX+Constants.boardHeight/2), (int) ((part.x)*scaleX+Constants.boardWight/2), (int) (-(part.y)*scaleX+Constants.boardHeight/2));
-        }
-        g2d.dispose();
-    }
-    /**
-     * Draw axes as bold lines crossing center of panel, draw "numberOfLines" lines equally spaced,
-     * occupying whole panel. Draw axes numbers
-     */
-    private void drawNet(Graphics g) {
-
-        Graphics2D g2d = (Graphics2D) g.create();
-        g.setFont(new Font("TimesRoman", Font.PLAIN, 10));
-        String str;
-        int numberOfLines = 19;
-        int mid = ((numberOfLines + 1) / 2);
-        for (int i = 0; i < numberOfLines; i++) {
-            g.drawLine(0, (int) (0.5 * Constants.boardHeight * ((i + 1.0) / mid)), Constants.boardWight, (int) (0.5 * Constants.boardHeight * ((i + 1.0) / mid)));
-            str = String.format("%.1f%n", (int) (Constants.boardHeight * (-(i-mid+1.0) / (2*mid)))/this.scaleY);
-            g.drawString(str,Constants.boardWight/2-g.getFontMetrics().stringWidth(str)-2, (int) (0.5 * Constants.boardHeight * ((i + 1.0) / mid))+15);
-
-        }
-        for (int i = 0; i < numberOfLines; i++) {
-            if(i!=(mid-1)) {
-                g.drawLine((int) (0.5 * Constants.boardWight * ((i + 1.0) / mid)), 0, (int) (0.5 * Constants.boardWight * ((i + 1.0) / mid)), Constants.boardHeight);
-                str = String.format("%.1f%n", (int) (Constants.boardWight * ((i - mid + 1.0) / (2 * mid))) / this.scaleX);
-                g.drawString(str, (int) (0.5 * Constants.boardWight * ((i + 1.0) / mid)) - g.getFontMetrics().stringWidth(str), Constants.boardHeight / 2 + 15);
-            }
-        }
-        g.setFont(new Font("TimesRoman", Font.BOLD, 14));
-        g.drawString(showX.getSelectedItem(),(Constants.boardWight - g.getFontMetrics().stringWidth(showX.getSelectedItem()))-5, Constants.boardHeight / 2 + 15);
-        g.drawString(showY.getSelectedItem(),(Constants.boardWight/2 - g.getFontMetrics().stringWidth(showY.getSelectedItem()))-5, 15);
-
-        g2d.setStroke(new BasicStroke(3, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-
-
-        g2d.drawLine(0, Constants.boardHeight/2, Constants.boardWight, Constants.boardHeight/2);
-        g2d.drawLine(Constants.boardWight/2, 0, Constants.boardWight/2, Constants.boardHeight);
-
-        g2d.dispose();
-
-    }
-
-    @Override
-    public void disableRect(){
-        isRectExist=false;
-        if(((xf-xi)>50) && ((yf-yi)>50)){
-            setScales((scaleX /((xf-xi+0.0)/Constants.boardWight)),(scaleY /((yf-yi+0.0)/Constants.boardHeight)));
-        }
-        if(((xf-xi)<-50) && ((yf-yi)<-50)){
-            setScales((scaleX *((xi-xf+0.0)/Constants.boardWight)),(scaleY *((yi-yf+0.0)/Constants.boardHeight)));
-        }
-        repaint();
+        partPanel.setScaleX(0.01);
+        partPanel.setScaleY(0.01);
+        partPanel.setCanBeJoined(false);
+        partPanel.setIsCentred(true);
+        partPanel.setPreferredSize(new Dimension(Constants.boardWight, Constants.boardHeight));
+        partPanel.setBackground(Color.WHITE);
     }
 
     public void doOneLoop() {
@@ -241,22 +194,28 @@ public class PartSimulationMainPanel extends ResizableJPanel {
      * make one iteration (one revolution around accelerator)
      */
     private void update() {
-        //filling graph panel1 with information about particles (now it is wake_forces/Constants.wake)
-        ArrayList<Double> graphX = new ArrayList<>();
         ArrayList<ArrayList<Double>> graphY = new ArrayList<>();
         for (int j = 0; j < Constants.numberOfParticles; j++) {
-            graphX.add(particles[j].z);
             graphY.add(new ArrayList<>());
+            graphY.get(j).add(particles[j].x);
+            graphY.get(j).add(particles[j].y);
+        }
+        partPanel.fillGraph(graphY);
+
+        //filling graph panel1 with information about particles (now it is wake_forces/Constants.wake)
+        graphY = new ArrayList<>();
+        for (int j = 0; j < Constants.numberOfParticles; j++) {
+            graphY.add(new ArrayList<>());
+            graphY.get(j).add(particles[j].z);
             graphY.get(j).add(dipoleMoms[j]);
         }
-        panel1.fillGraph(graphX, graphY);
+        panel1.fillGraph(graphY);
 
         //iteration
         for(int k = 0; k<Constants.numberOfw0ForUpdate; k++) {
             //adding pickUp history
             pickUpD.add(dipoleFull());
             pickUpD.add(0.0);
-            pickUpW.add(0.0);
 
             for (int i = 0; i < (int) ((2 * Math.PI) / Constants.timeStep); i++) {
                 for (int j = 0; j < Constants.numberOfParticles; j++) {
@@ -307,29 +266,25 @@ public class PartSimulationMainPanel extends ResizableJPanel {
      * Calculates spectra (Re, Im and abs), filling graph panel2 with fourierAbs, write freq in label
      */
     private void calculateSpectra(){
+        int size2=pickUpD.size();
+        int size=size2/2;
         FFT fourierAnalysis = new FFT();
-        double[] fourier = new double[pickUpD.size()];
-        double[] pickUpW1 = new double[pickUpW.size()];
-        //double[] fourierRe = new double[pickUpD.size()];
-        //double[] fourierIm = new double[pickUpD.size()];
-        double[] fourierAbs = new double[pickUpD.size()];
-        for (int k = 0; k < pickUpD.size(); k++) {
+        double[] fourier = new double[size2];
+        double[] pickUpW1 = new double[size];
+        //double[] fourierRe = new double[size2];
+        //double[] fourierIm = new double[size2];
+        double[] fourierAbs = new double[size2];
+        for (int k = 0; k < size2; k++) {
             fourier[k] = pickUpD.get(k);
         }
-        for (int k = 0; k < pickUpW.size(); k++) {
-            pickUpW1[k] = (k+0.0)/(pickUpW.size());
-            fourier[k]*=Math.pow(Math.sin(k*Math.PI/(pickUpW.size()-1)),2);
+        for (int k = 0; k < size; k++) {
+            pickUpW1[k] = (k+0.0)/(size);
+            fourier[k]*=Math.pow(Math.sin(k*Math.PI/(size-1)),2);
         }
-        //printing figure of D(n)
-        /*double[] tempD = new double[pickUpW.size()];
-        for (int k = 0; k < pickUpD.size(); k++) {
-            if(k%2==0) tempD[k/2] = pickUpD.get(k);
-        }
-        panel1.fillGraph(pickUpW1,tempD);*/
         fourier = fourierAnalysis.transform(fourier);
         double max =  1;
-        double wMax=0;
-        for (int k = 0; k < pickUpD.size(); k++) {
+        double wMax = 0;
+        for (int k = 0; k < size2; k++) {
             if(k%2==0){
                 //fourierRe[k/2]=fourier[k];
             } else {
@@ -338,20 +293,19 @@ public class PartSimulationMainPanel extends ResizableJPanel {
                 fourierAbs[n]=Math.sqrt(fourier[k]*fourier[k]+fourier[k-1]*fourier[k-1]);
                 if(fourierAbs[n]>max){
                     max=fourierAbs[n];
-                    wMax=(n+1.0)/pickUpW.size();
+                    wMax=(n+1.0)/size;
                 }
             }
         }
-        ArrayList<Double> graphX = new ArrayList<>();
         ArrayList<ArrayList<Double>> graphY = new ArrayList<>();
-        for (int k = 0; k < pickUpW.size(); k++) {
+        for (int k = 0; k < size; k++) {
             if(fourierMode==1) fourierAbs[k]=Math.log(fourierAbs[k]/max);
             else fourierAbs[k]=fourierAbs[k]/max;
-            graphX.add(pickUpW1[k]);
             graphY.add(new ArrayList<>());
+            graphY.get(k).add(pickUpW1[k]);
             graphY.get(k).add(fourierAbs[k]);
         }
-        panel2.fillGraph(graphX, graphY);
+        panel2.fillGraph(graphY);
         String str = String.format("%.3f%n",wMax);
         label.setText("wx = "+str);
         repaint();
@@ -362,7 +316,6 @@ public class PartSimulationMainPanel extends ResizableJPanel {
             for (int k = 0; k < 100; k++) {
                 pickUpD.add(dipoleFull());
                 pickUpD.add(0.0);
-                pickUpW.add(0.0);
                 for (int i = 0; i < (int) ((2 * Math.PI * Constants.numberOfw0ForUpdate) / Constants.timeStep); i++) {
                     for (int j = 0; j < Constants.numberOfParticles; j++) {
                         dipoleMoms[j] = countDipoleMom(particles[j]);
@@ -381,5 +334,9 @@ public class PartSimulationMainPanel extends ResizableJPanel {
     private void switchFourierMode(){
         if(fourierMode==1) fourierMode=0;
         else fourierMode=1;
+    }
+
+    public double getWake(){
+        return wake;
     }
 }

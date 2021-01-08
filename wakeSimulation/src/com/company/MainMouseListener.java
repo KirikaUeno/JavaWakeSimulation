@@ -1,5 +1,6 @@
 package com.company;
 
+import com.ui.MainFrame;
 import com.ui.ResizableJPanel;
 
 import javax.swing.event.MouseInputAdapter;
@@ -46,12 +47,14 @@ public class MainMouseListener extends MouseInputAdapter {
     public void mouseReleased(MouseEvent e){
         if(MODE==0) {
             panel.disableRect();
+            e.getComponent().repaint();
         }
 
     }
 
     public void mouseClicked(MouseEvent e) {
         e.getComponent().requestFocus();
+        e.getComponent().repaint();
     }
 
     public void mouseMoved(MouseEvent e) {

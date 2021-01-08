@@ -36,12 +36,12 @@ public class Particle {
         double dMid;
 
         x1mid = x1 + Constants.timeStep * px1 * 0.5;
-        px1mid = px1 + 0.5 * Constants.timeStep * (-x1*Constants.xFreq*Constants.xFreq + Constants.wake * gp.getDipoleMom());
+        px1mid = px1 + 0.5 * Constants.timeStep * (-x1*Constants.xFreq*Constants.xFreq + gp.getWake() * gp.getDipoleMom());
         zMid = z - 0.5 * Constants.timeStep * d * Constants.eta;
         dMid = d + 0.5 * Constants.timeStep * (z*Constants.zFreq*Constants.zFreq/Constants.eta + x1 * 0);
 
         x1 += Constants.timeStep * px1mid;
-        px1 += Constants.timeStep * (-x1mid*Constants.xFreq*Constants.xFreq + Constants.wake * gp.getDipoleMom());
+        px1 += Constants.timeStep * (-x1mid*Constants.xFreq*Constants.xFreq + gp.getWake() * gp.getDipoleMom());
         z += -Constants.timeStep * dMid* Constants.eta;
         d += Constants.timeStep * (zMid*Constants.zFreq*Constants.zFreq/Constants.eta + x1mid * 0);
 
