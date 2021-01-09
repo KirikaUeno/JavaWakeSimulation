@@ -19,10 +19,10 @@ public class Constants {
     public static final String BACKGROUND_IMAGE_URL = "images/background.png";
 
 
-    public static final int updateSpeed = 20;
+    public static final int updateSpeed = 10;
     public static final int numberOfParticles = 101;
     public static final double timeStep = 1.0 / 100;
-    public static final int numberOfw0ForUpdate = 2;
+    public static final int numberOfw0ForUpdate = 1;
     public static final double xFreq = 0.1818751;
     public static final double zFreq = 0.0042751;
     public static final double eta = 0.00058;

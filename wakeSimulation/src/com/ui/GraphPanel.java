@@ -107,6 +107,10 @@ public class GraphPanel extends ResizableJPanel {
         String str;
         int numberOfLines = 9;
         int mid = ((numberOfLines + 1) / 2);
+        if(shiftY==0 && shiftX==0){
+            x0=-mid*stepX;
+            y0=-mid*stepY;
+        }
         int wight=this.getWidth();
         int height=this.getHeight();
         for (int i = 1; i < numberOfLines+1; i++) {

@@ -4,7 +4,7 @@ import com.company.Constants;
 import com.ui.PartSimulationMainPanel;
 
 
-public class Particle {
+public class Particle{
     public double x1;
     public double px1;
     public double z;
@@ -15,7 +15,7 @@ public class Particle {
     private String xAxe="z";
     private String yAxe="x";
 
-    public Particle(double x, double px, double z, double d, PartSimulationMainPanel gap) {
+    public Particle(double x, double px, double z, double d, PartSimulationMainPanel gap){
         this.x1 = x;
         this.px1 = px;
         this.z = z;
@@ -68,5 +68,9 @@ public class Particle {
     }
     public void setYAxe(String s){
         yAxe=s;
+    }
+
+    public String toString(){
+        return (""+z);
     }
 }

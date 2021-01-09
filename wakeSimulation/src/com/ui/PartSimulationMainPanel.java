@@ -3,8 +3,6 @@ package com.ui;
 import com.company.Constants;
 import com.company.MainKeyListener;
 import com.company.MainMouseListener;
-import com.image.*;
-import com.image.Image;
 import com.objects.Particle;
 import org.opensourcephysics.numerics.FFT;
 import java.lang.Math;
@@ -12,6 +10,9 @@ import java.lang.Math;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+
 /**
  * Panel for 1st operating mode of program. Fill whole field of application.
  * Sets array of particles with air-bag distribution in longitudinal and transverse dimensions.
@@ -19,9 +20,8 @@ import java.util.ArrayList;
 public class PartSimulationMainPanel extends JPanel {
     private Timer timer;
 
-    private ImageIcon backgroundImage;
-
     private final JLabel label = new JLabel();
+    private final JLabel fpsLabel = new JLabel("");
     private final GraphPanel partPanel = new GraphPanel("partPanel");
     private final GraphPanel panel1 = new GraphPanel("panel1");
     private final GraphPanel panel2 = new GraphPanel("panel2");
@@ -35,9 +35,10 @@ public class PartSimulationMainPanel extends JPanel {
     private final Choice showY = new Choice();
 
     private final ArrayList<Double> pickUpD= new ArrayList<>();
-    private double wake=0.0005;
+    private double wake=0.001;
 
     private int fourierMode = 0;
+    private double fpsOldTime = System.currentTimeMillis();
 
     /**
      * Sets panel size, listeners, reference to main panel to change modes of program.
@@ -77,7 +78,7 @@ public class PartSimulationMainPanel extends JPanel {
         Button calculateSpectra = new Button("spectra");
         Button countSimulation = new Button("spectrum count");
         Button switchFourierMode = new Button("switch");
-        TextField wakeField = new TextField("0.0005");
+        TextField wakeField = new TextField(""+wake);
 
         swapToCirculants.addActionListener(e -> { this.timer.stop();this.mainFrame.swapToCirculants();});
         start.addActionListener(e -> this.timer.start());
@@ -140,7 +141,10 @@ public class PartSimulationMainPanel extends JPanel {
         layout.putConstraint(SpringLayout.WEST, wakeField, 5, SpringLayout.EAST, wakeLabel);
         layout.putConstraint(SpringLayout.NORTH, wakeField, 5, SpringLayout.SOUTH, start);
 
-        layout.putConstraint(SpringLayout.NORTH, partPanel.resetScales, 5, SpringLayout.SOUTH, this);
+        layout.putConstraint(SpringLayout.NORTH, partPanel.resetScales, 5, SpringLayout.SOUTH, swapToCirculants);
+        layout.putConstraint(SpringLayout.WEST, partPanel.resetScales, 5, SpringLayout.WEST, this);
+        layout.putConstraint(SpringLayout.NORTH, fpsLabel, 5, SpringLayout.SOUTH, partPanel.resetScales);
+        layout.putConstraint(SpringLayout.WEST, fpsLabel, 5, SpringLayout.WEST, this);
 
         setLayout(layout);
         partPanel.setLayout(layout);
@@ -159,6 +163,7 @@ public class PartSimulationMainPanel extends JPanel {
         partPanel.add(label);
         partPanel.add(panel1);
         partPanel.add(panel2);
+        partPanel.add(fpsLabel);
         add(partPanel);
 
         this.particles = new Particle[Constants.numberOfParticles];
@@ -166,13 +171,12 @@ public class PartSimulationMainPanel extends JPanel {
             particles[i] = new Particle(10 * Math.cos(Math.PI * 2 * i / Constants.numberOfParticles), 10 * Math.sin(Math.PI * 2 * i / Constants.numberOfParticles)*Constants.xFreq+Constants.Zx, 10 * Math.cos(Math.PI * 2 * i / Constants.numberOfParticles), 10 * Math.sin(Math.PI * 2 * i / Constants.numberOfParticles)*Constants.zFreq/Constants.eta, this);
         }
 
-        this.backgroundImage = ImageFactory.createImage(Image.BACKGROUND);
         this.timer = new Timer(Constants.updateSpeed, e -> doOneLoop());
 
         panel1.setScaleX(0.02);
         panel1.setScaleY(0.05);
 
-        panel2.setPreferredSize(new Dimension(500, 400));
+        panel2.setPreferredSize(new Dimension(400, 300));
         panel2.setScaleX(1);
         panel2.setScaleY(0.04);
         panel2.setShiftX(-0.5);
@@ -183,6 +187,14 @@ public class PartSimulationMainPanel extends JPanel {
         partPanel.setIsCentred(true);
         partPanel.setPreferredSize(new Dimension(Constants.boardWight, Constants.boardHeight));
         partPanel.setBackground(Color.WHITE);
+
+        Arrays.sort(particles, Comparator.comparingDouble(a -> a.z));
+        dipoleMoms[0] = particles[0].x1/Constants.numberOfParticles;
+        for (int j = 1; j < Constants.numberOfParticles; j++) {
+            dipoleMoms[j] = dipoleMoms[j-1] + particles[j].x1/Constants.numberOfParticles;
+        }
+        drawInfo();
+        repaint();
     }
 
     public void doOneLoop() {
@@ -194,6 +206,32 @@ public class PartSimulationMainPanel extends JPanel {
      * make one iteration (one revolution around accelerator)
      */
     private void update() {
+        iteration();
+        drawInfo();
+        fpsLabel.setText(""+getFPS(fpsOldTime));
+    }
+
+    private void iteration(){
+        for(int k = 0; k<Constants.numberOfw0ForUpdate; k++) {
+            //adding pickUp history
+            pickUpD.add(dipoleFull());
+            pickUpD.add(0.0);
+
+            for (int i = 0; i < (int) ((2 * Math.PI) / Constants.timeStep); i++) {
+                Arrays.sort(particles, Comparator.comparingDouble(a -> a.z));
+                dipoleMom = 0;
+                particles[0].move();
+                dipoleMoms[0] = particles[0].x1/Constants.numberOfParticles;
+                for (int j = 1; j < Constants.numberOfParticles; j++) {
+                    dipoleMoms[j] = dipoleMoms[j-1] + particles[j].x1/Constants.numberOfParticles;
+                    dipoleMom = dipoleMoms[j-1] + 0.5*particles[j].x1/Constants.numberOfParticles;
+                    particles[j].move();
+                }
+            }
+        }
+    }
+
+    private void drawInfo(){
         ArrayList<ArrayList<Double>> graphY = new ArrayList<>();
         for (int j = 0; j < Constants.numberOfParticles; j++) {
             graphY.add(new ArrayList<>());
@@ -202,31 +240,24 @@ public class PartSimulationMainPanel extends JPanel {
         }
         partPanel.fillGraph(graphY);
 
-        //filling graph panel1 with information about particles (now it is wake_forces/Constants.wake)
         graphY = new ArrayList<>();
+        //filling graph panel1 with information about particles (now it is wake_forces/Constants.wake)
         for (int j = 0; j < Constants.numberOfParticles; j++) {
             graphY.add(new ArrayList<>());
             graphY.get(j).add(particles[j].z);
             graphY.get(j).add(dipoleMoms[j]);
         }
         panel1.fillGraph(graphY);
+    }
 
-        //iteration
-        for(int k = 0; k<Constants.numberOfw0ForUpdate; k++) {
-            //adding pickUp history
-            pickUpD.add(dipoleFull());
-            pickUpD.add(0.0);
+    int getFPS(double oldTime) {
+        double newTime = System.currentTimeMillis();
+        double delta = newTime - oldTime;
 
-            for (int i = 0; i < (int) ((2 * Math.PI) / Constants.timeStep); i++) {
-                for (int j = 0; j < Constants.numberOfParticles; j++) {
-                    dipoleMoms[j] = countDipoleMom(particles[j]);
-                }
-                for (int j = 0; j < Constants.numberOfParticles; j++) {
-                    dipoleMom = dipoleMoms[j];
-                    particles[j].move();
-                }
-            }
-        }
+        int fps = (int)(1.0 / (delta/1000));
+        fpsOldTime = newTime;
+
+        return fps;
     }
     /**
      * returns full dipole moment of beam
@@ -243,18 +274,6 @@ public class PartSimulationMainPanel extends JPanel {
         for (Particle part : particles) {
             part.repaint();
         }
-    }
-    /**
-     * returns sum of particles transverse coordinate that ahead of p
-     */
-    private double countDipoleMom(Particle p) {
-        double sum = 0;
-        for (Particle part : particles) {
-            if (part.z > p.z) {
-                sum += part.x1;
-            }
-        }
-        return sum / Constants.numberOfParticles;
     }
     /**
      * is needed to transfer collective information to single particle equations of motion
@@ -314,21 +333,12 @@ public class PartSimulationMainPanel extends JPanel {
     private void countSpectra(){
         for(int p=0;p<50;p++) {
             for (int k = 0; k < 100; k++) {
-                pickUpD.add(dipoleFull());
-                pickUpD.add(0.0);
-                for (int i = 0; i < (int) ((2 * Math.PI * Constants.numberOfw0ForUpdate) / Constants.timeStep); i++) {
-                    for (int j = 0; j < Constants.numberOfParticles; j++) {
-                        dipoleMoms[j] = countDipoleMom(particles[j]);
-                    }
-                    for (int j = 0; j < Constants.numberOfParticles; j++) {
-                        dipoleMom = dipoleMoms[j];
-                        particles[j].move();
-                    }
-                }
+                iteration();
             }
             System.out.println(""+(p+1)+" iterations passed");
         }
         calculateSpectra();
+        System.out.println("done!");
     }
 
     private void switchFourierMode(){

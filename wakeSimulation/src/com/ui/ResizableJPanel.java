@@ -42,7 +42,8 @@ public class ResizableJPanel extends JPanel {
             setShifts((shiftX*wight-(xf+xi+0.0-wight)/2)/(xf-xi),(shiftY*height+(yf+yi+0.0-height)/2)/(yf-yi));
         }
         if(((xf-xi)<-10) && ((yf-yi)<-10)){
-            //setScales((scaleX *((xi-xf+0.0)/wight)),(scaleY *((yi-yf+0.0)/height)));
+            setScales((scaleX *((xi-xf+0.0)/wight)),(scaleY *((yi-yf+0.0)/height)));
+            setShifts((shiftX*(xi-xf)+(xf+xi-wight+0.0)/2)/wight,(shiftY*(yi-yf)-(yf+yi-height+0.0)/2)/height);
         }
         if(isCentred) {
             shiftX = 0;
