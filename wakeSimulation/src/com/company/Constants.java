@@ -2,9 +2,7 @@ package com.company;
 
 public class Constants {
 
-    private Constants() {
-
-    }
+    private Constants() {    }
 
     public static final String title = "WakeSimulation";
     public static final int boardWight = 1080;
@@ -14,10 +12,6 @@ public class Constants {
     public static final int graphHeight = 180;
 
     public static final String WAKE_MATRIX_URL = "inputMatrix.txt";
-    public static final String ICON_IMAGE_URL = "images/appIcon.jpg";
-    public static final String POINT_IMAGE_URL = "images/point.png";
-    public static final String BACKGROUND_IMAGE_URL = "images/background.png";
-
 
     public static final int updateSpeed = 10;
     public static final int numberOfParticles = 101;

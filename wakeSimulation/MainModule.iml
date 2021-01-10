@@ -8,7 +8,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="osp" level="project" />
-    <orderEntry type="library" name="jblas-1.2.4" level="project" />
+    <orderEntry type="library" exported="" name="osp" level="project" />
+    <orderEntry type="library" exported="" name="jblas-1.2.4" level="project" />
   </component>
 </module>

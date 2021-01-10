@@ -1,11 +1,8 @@
 package com.ui;
 
 import com.company.Constants;
-import com.image.*;
-import com.image.Image;
 
 import javax.swing.*;
-import java.util.Objects;
 
 public class MainFrame extends JFrame {
     private PartSimulationMainPanel partSimulationMainPanel;
@@ -16,7 +13,8 @@ public class MainFrame extends JFrame {
 
     private void initializeLayout() {
         setTitle(Constants.title);
-        setIconImage(Objects.requireNonNull(ImageFactory.createImage(Image.ICON)).getImage());
+        ImageIcon icon = new ImageIcon("images/appIcon.jpg");
+        setIconImage(icon.getImage());
 
         partSimulationMainPanel = new PartSimulationMainPanel(this);
         add(partSimulationMainPanel);
