@@ -15,12 +15,12 @@ public class Constants {
 
     public static final int updateSpeed = 10;
     public static final int numberOfParticles = 101;
-    public static final double timeStep = 1.0 / 100;
+    public static final double timeStep = 1.0 / 50;
     public static final int numberOfw0ForUpdate = 1;
     public static final double xFreq = 0.1818751;
     public static final double zFreq = 0.0042751;
     public static final double eta = 0.00058;
-    public static final double Zx = 0.05;
+    public static final double Zx = 1.00;
 
     public static final int boxesNumber = 33;
     public static final int currentSamples = 101;

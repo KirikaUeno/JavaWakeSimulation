@@ -38,7 +38,7 @@ public class PartSimulationMainPanel extends JPanel {
     private final Choice showY = new Choice();
 
     private final ArrayList<Double> pickUpD= new ArrayList<>();
-    private double wake=0.001;
+    private double wake=0.000;
 
     private int fourierMode = 0;
     private double fpsOldTime = System.currentTimeMillis();
