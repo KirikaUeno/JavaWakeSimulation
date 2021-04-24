@@ -9,6 +9,8 @@ public class Particle{
     public double px1;
     public double z;
     public double d;
+    public double y1;
+    public double py1;
     public double x;
     public double y;
     private final PartSimulationMainPanel gp;
@@ -16,11 +18,13 @@ public class Particle{
     private String yAxe="x";
     private boolean isEuler = true;
 
-    public Particle(double x, double px, double z, double d, PartSimulationMainPanel gap){
+    public Particle(double x, double px, double z, double d, double y, double py, PartSimulationMainPanel gap){
         this.x1 = x;
         this.px1 = px;
         this.z = z;
         this.d = d;
+        this.y1=y;
+        this.py1=py;
         gp = gap;
         initialize();
     }
@@ -33,18 +37,24 @@ public class Particle{
     public void move() {
         double x1mid;
         double px1mid;
+        double y1mid;
+        double py1mid;
         double zMid;
         double dMid;
 
         if(isEuler) {
             //euler
             x1mid = x1 + Constants.timeStep * px1 * 0.5;
-            px1mid = px1 + 0.5 * Constants.timeStep * (-x1 * Constants.xFreq * Constants.xFreq + gp.getWake() * gp.getDipoleMom());
+            px1mid = px1 + 0.5 * Constants.timeStep * (-x1 * Constants.xFreq * Constants.xFreq + gp.getWake() * gp.getDipoleMomX());
+            y1mid = y1 + Constants.timeStep * py1 * 0.5;
+            py1mid = py1 + 0.5 * Constants.timeStep * (-y1 * Constants.yFreq * Constants.yFreq + gp.getWake() * gp.getDipoleMomY());
             zMid = z - 0.5 * Constants.timeStep * d * Constants.eta;
             dMid = d + 0.5 * Constants.timeStep * (z * Constants.zFreq * Constants.zFreq / Constants.eta + x1 * 0);
 
             x1 += Constants.timeStep * px1mid;
-            px1 += Constants.timeStep * (-x1mid * Constants.xFreq * Constants.xFreq + gp.getWake() * gp.getDipoleMom());
+            px1 += Constants.timeStep * (-x1mid * Constants.xFreq * Constants.xFreq + gp.getWake() * gp.getDipoleMomX());
+            y1 += Constants.timeStep * py1mid;
+            py1 += Constants.timeStep * (-y1mid * Constants.xFreq * Constants.yFreq + gp.getWake() * gp.getDipoleMomY());
             z += -Constants.timeStep * dMid * Constants.eta;
             d += Constants.timeStep * (zMid * Constants.zFreq * Constants.zFreq / Constants.eta + x1mid * 0);
         } else {
@@ -66,7 +76,7 @@ public class Particle{
         return px;
     }
     private double fpx(double x, double px, double z, double d){
-        return -x*Constants.xFreq*Constants.xFreq + gp.getWake() * gp.getDipoleMom();
+        return -x*Constants.xFreq*Constants.xFreq + gp.getWake() * gp.getDipoleMomX();
     }
     private double fz(double x, double px, double z, double d){
         return -d* Constants.eta;

@@ -15,6 +15,8 @@ public class GraphPanel extends ResizableJPanel {
     private String xAxe="";
     private String yAxe="";
     public Button resetScales = new Button("reset scales");
+    public int pointSize = 2;
+    public int highlightedPoint = -1;
 
     public GraphPanel(String name) {
         setPreferredSize(new Dimension(Constants.graphWight, Constants.graphHeight));
@@ -37,7 +39,7 @@ public class GraphPanel extends ResizableJPanel {
 
         drawLines(g);
 
-        g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g2d.setStroke(new BasicStroke(pointSize, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         //сделать проверку: если при каждом i размер y одинакоывый, то соединять точки
         int count=0;
         if(graph.size()>0) count = graph.get(0).size()-1;
@@ -57,10 +59,20 @@ public class GraphPanel extends ResizableJPanel {
                 }
             }
         } else {
-            for (ArrayList<Double> point : graph) {
-                for (int j = 1; j < count + 1; j++) {
-                    g2d.drawLine((int) (wight * (point.get(0) * scaleX + 0.5 + shiftX)), -(int) (height * (point.get(j) * scaleY - 0.5 + shiftY)), (int) (wight * (point.get(0) * scaleX + 0.5 + shiftX)), -(int) (height * (point.get(j) * scaleY - 0.5 + shiftY)));
+            for (int i = 0; i < graph.size(); i++) {
+                if(i==highlightedPoint){
+                    g2d.setColor(Color.RED);
+                    for (int j = 1; j < count + 1; j++) {
+                        g2d.drawLine((int) (wight * (graph.get(i).get(0) * scaleX + 0.5 + shiftX)), -(int) (height * (graph.get(i).get(j) * scaleY - 0.5 + shiftY)), (int) (wight * (graph.get(i).get(0) * scaleX + 0.5 + shiftX)), -(int) (height * (graph.get(i).get(j) * scaleY - 0.5 + shiftY)));
+                    }
+                    g2d.setColor(Color.BLACK);
                 }
+                else{
+                    for (int j = 1; j < count + 1; j++) {
+                        g2d.drawLine((int) (wight * (graph.get(i).get(0) * scaleX + 0.5 + shiftX)), -(int) (height * (graph.get(i).get(j) * scaleY - 0.5 + shiftY)), (int) (wight * (graph.get(i).get(0) * scaleX + 0.5 + shiftX)), -(int) (height * (graph.get(i).get(j) * scaleY - 0.5 + shiftY)));
+                    }
+                }
+
             }
         }
         g2d.dispose();
@@ -128,8 +140,8 @@ public class GraphPanel extends ResizableJPanel {
             }
         }
         g.setFont(new Font("TimesRoman", Font.BOLD, 14));
-        g.drawString(xAxe,(Constants.boardWight - g.getFontMetrics().stringWidth(xAxe))-5, Constants.boardHeight / 2 + 15);
-        g.drawString(yAxe,(Constants.boardWight/2 - g.getFontMetrics().stringWidth(yAxe))-5, 15);
+        g.drawString(xAxe,(this.getWidth() - g.getFontMetrics().stringWidth(xAxe))-5, this.getHeight() / 2 + 15);
+        g.drawString(yAxe,(this.getWidth()/2 - g.getFontMetrics().stringWidth(yAxe))-5, 15);
 
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
