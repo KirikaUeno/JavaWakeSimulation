@@ -1,6 +1,6 @@
 package ui;
 
-import company.Constants;
+import company.Config;
 import company.MainMouseListener;
 import objects.BoxOfPart;
 import org.opensourcephysics.numerics.Complex;
@@ -26,13 +26,13 @@ public class CirculantsMainPanel extends JPanel {
     private double[][] wakeFunction;
     private double[][] wakeMatrix;
     private double[][] circulantMatrix;
-    private final BoxOfPart[] boxes = new BoxOfPart[Constants.boxesNumber];
+    private final BoxOfPart[] boxes = new BoxOfPart[Config.boxesNumber];
     private double wake = 1;
     /**
      * Create panel and make reference to mainPanel to be able to swap modes. Calls initializeVariables().
      */
     public CirculantsMainPanel(MainFrame mainFrame){
-        setPreferredSize(new Dimension(Constants.boardWight, Constants.boardHeight));
+        setPreferredSize(new Dimension(Config.boardWight, Config.boardHeight));
         setFocusable(true);
         MainMouseListener mainMouseListener = new MainMouseListener(graphPanel);
         graphPanel.addMouseListener(mainMouseListener);
@@ -64,7 +64,7 @@ public class CirculantsMainPanel extends JPanel {
         layout.putConstraint(SpringLayout.WEST, calculateSpectra, 5, SpringLayout.WEST, this);
         layout.putConstraint(SpringLayout.NORTH, calculateSpectra, 5, SpringLayout.NORTH, this);
 
-        layout.putConstraint(SpringLayout.HORIZONTAL_CENTER, swapToSimulation, Constants.boardWight/2, SpringLayout.WEST, this);
+        layout.putConstraint(SpringLayout.HORIZONTAL_CENTER, swapToSimulation, Config.boardWight/2, SpringLayout.WEST, this);
         layout.putConstraint(SpringLayout.NORTH, swapToSimulation, 5, SpringLayout.NORTH, this);
 
         layout.putConstraint(SpringLayout.WEST, wakeLabel, 5, SpringLayout.EAST, calculateSpectra);
@@ -81,10 +81,10 @@ public class CirculantsMainPanel extends JPanel {
         add(wakeLabel);
         add(wakeField);
 
-        this.timer = new Timer(Constants.updateSpeed, e->doOneLoop());
+        this.timer = new Timer(Config.updateSpeed, e->doOneLoop());
 
-        for(int i = 0; i<Constants.boxesNumber;i++){
-            boxes[i] = new BoxOfPart(Constants.z0*Math.cos(2*Math.PI*(i+0.5)/Constants.boxesNumber));
+        for(int i = 0; i< Config.boxesNumber; i++){
+            boxes[i] = new BoxOfPart(Config.z0*Math.cos(2*Math.PI*(i+0.5)/ Config.boxesNumber));
             //System.out.println(boxes[i].z);
         }
         //reading wake function from file and calculating wake matrix
@@ -92,7 +92,7 @@ public class CirculantsMainPanel extends JPanel {
         wakeMatrix=calculateWakeMatrix();
         circulantMatrix=calculateCirculant();
         graphPanel.setName("mode2");
-        graphPanel.setPreferredSize(new Dimension(Constants.boardWight, Constants.boardHeight-25));
+        graphPanel.setPreferredSize(new Dimension(Config.boardWight, Config.boardHeight-25));
         graphPanel.setScaleX(10);
         graphPanel.setScaleY(0.05);
         graphPanel.setShiftX(-0.5);
@@ -104,16 +104,16 @@ public class CirculantsMainPanel extends JPanel {
     private void calculateSpectra() {
         ArrayList<ArrayList<Double>> graphY = new ArrayList<>();
         Complex[][] mainMatrix;
-        Complex[] eigenValues = new Complex[Constants.boxesNumber];
-        Complex[][] eigenVectors = new Complex[Constants.boxesNumber][Constants.boxesNumber];
-        boolean[] isOk=new boolean[Constants.boxesNumber];
-        for(int j=0;j<Constants.currentSamples;j++){
-            mainMatrix=makeMatrix(j*Constants.currentSamplesStep);
+        Complex[] eigenValues = new Complex[Config.boxesNumber];
+        Complex[][] eigenVectors = new Complex[Config.boxesNumber][Config.boxesNumber];
+        boolean[] isOk=new boolean[Config.boxesNumber];
+        for(int j = 0; j< Config.currentSamples; j++){
+            mainMatrix=makeMatrix(j* Config.currentSamplesStep);
             ComplexEigenvalueDecomposition.eigen(mainMatrix,eigenValues,eigenVectors,isOk);
             graphY.add(new ArrayList<>());
-            graphY.get(j).add(j*Constants.currentSamplesStep*wake);
-            for(int i=0;i<Constants.boxesNumber;i++) {
-                graphY.get(j).add(eigenValues[i].re()/Constants.zFreq);
+            graphY.get(j).add(j* Config.currentSamplesStep*wake);
+            for(int i = 0; i< Config.boxesNumber; i++) {
+                graphY.get(j).add(eigenValues[i].re()/ Config.zFreq);
                 //System.out.println(eigenValues[i].re());
             }
             Collections.sort(graphY.get(j));
@@ -125,11 +125,11 @@ public class CirculantsMainPanel extends JPanel {
      * make complex matrix from Re=Constants.wake cur wakeMatrix, Im=-I ws circulantMatrix.
      */
     private Complex[][] makeMatrix(double cur){
-        Complex[][] matrix1 = new Complex[Constants.boxesNumber][Constants.boxesNumber];
-        for(int i=0;i<Constants.boxesNumber;i++){
-            for(int j=0;j<Constants.boxesNumber;j++){
+        Complex[][] matrix1 = new Complex[Config.boxesNumber][Config.boxesNumber];
+        for(int i = 0; i< Config.boxesNumber; i++){
+            for(int j = 0; j< Config.boxesNumber; j++){
                 matrix1[i][j]=new Complex();
-                matrix1[i][j].set(wake*cur*wakeMatrix[i][j],-Constants.zFreq*circulantMatrix[i][j]);
+                matrix1[i][j].set(wake*cur*wakeMatrix[i][j],-Config.zFreq*circulantMatrix[i][j]);
             }
         }
         return matrix1;
@@ -139,7 +139,7 @@ public class CirculantsMainPanel extends JPanel {
      */
     private double[][] readWake(){
         try {
-            File matrixFile = new File(Constants.WAKE_MATRIX_URL);
+            File matrixFile = new File(Config.WAKE_MATRIX_URL);
             ArrayList<Double> matrixList=new ArrayList<>();
             Scanner s = new Scanner(matrixFile);
             while (!s.hasNextDouble()) {
@@ -180,9 +180,9 @@ public class CirculantsMainPanel extends JPanel {
      * calculate matrix of interactions between boxes. If zi=zj return wake/2, if zi<zj return wake, else return 0.
      */
     private double[][] calculateWakeMatrix(){
-        double[][] tempMatrix = new double[Constants.boxesNumber][Constants.boxesNumber];
-        for(int i=0;i<Constants.boxesNumber;i++){
-            for(int j=0;j<Constants.boxesNumber;j++){
+        double[][] tempMatrix = new double[Config.boxesNumber][Config.boxesNumber];
+        for(int i = 0; i< Config.boxesNumber; i++){
+            for(int j = 0; j< Config.boxesNumber; j++){
                 tempMatrix[i][j]=0;
                 if((boxes[i].z-boxes[j].z)<-0.001){
                     tempMatrix[i][j]+=findWake((boxes[i].z-boxes[j].z));
@@ -199,11 +199,11 @@ public class CirculantsMainPanel extends JPanel {
      * Calculate symmetric circulant (numberOfBoxes is odd, modes are symmetric relatively to 0).
      */
     private double[][] calculateCirculant(){
-        double[][] tempMatrix = new double[Constants.boxesNumber][Constants.boxesNumber];
-        for(int i=0;i<Constants.boxesNumber;i++){
-            for(int j=0;j<Constants.boxesNumber;j++){
+        double[][] tempMatrix = new double[Config.boxesNumber][Config.boxesNumber];
+        for(int i = 0; i< Config.boxesNumber; i++){
+            for(int j = 0; j< Config.boxesNumber; j++){
                 if(i!=j){
-                    tempMatrix[i][j]=Math.pow(-1, i-j)/Math.sin((i-j)*Math.PI/(Constants.boxesNumber))/2;
+                    tempMatrix[i][j]=Math.pow(-1, i-j)/Math.sin((i-j)*Math.PI/(Config.boxesNumber))/2;
                 } else {
                     tempMatrix[i][j]=0;
                 }

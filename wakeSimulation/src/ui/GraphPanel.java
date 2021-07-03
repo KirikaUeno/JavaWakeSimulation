@@ -1,6 +1,6 @@
 package ui;
 
-import company.Constants;
+import company.Config;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -17,9 +17,12 @@ public class GraphPanel extends ResizableJPanel {
     public Button resetScales = new Button("reset scales");
     public int pointSize = 2;
     public int highlightedPoint = -1;
+    public boolean drawLine = false;
+    public int xLine = 0;
+    public double pointerW = 0;
 
     public GraphPanel(String name) {
-        setPreferredSize(new Dimension(Constants.graphWight, Constants.graphHeight));
+        setPreferredSize(new Dimension(Config.graphWight, Config.graphHeight));
         setFocusable(true);
         setName(name);
         initializeVariables();
@@ -62,13 +65,13 @@ public class GraphPanel extends ResizableJPanel {
             for (int i = 0; i < graph.size(); i++) {
                 if(i==highlightedPoint){
                     g2d.setColor(Color.RED);
-                    for (int j = 1; j < count + 1; j++) {
+                    for (int j = 1; j < graph.get(i).size(); j++) {
                         g2d.drawLine((int) (wight * (graph.get(i).get(0) * scaleX + 0.5 + shiftX)), -(int) (height * (graph.get(i).get(j) * scaleY - 0.5 + shiftY)), (int) (wight * (graph.get(i).get(0) * scaleX + 0.5 + shiftX)), -(int) (height * (graph.get(i).get(j) * scaleY - 0.5 + shiftY)));
                     }
                     g2d.setColor(Color.BLACK);
                 }
                 else{
-                    for (int j = 1; j < count + 1; j++) {
+                    for (int j = 1; j < graph.get(i).size(); j++) {
                         g2d.drawLine((int) (wight * (graph.get(i).get(0) * scaleX + 0.5 + shiftX)), -(int) (height * (graph.get(i).get(j) * scaleY - 0.5 + shiftY)), (int) (wight * (graph.get(i).get(0) * scaleX + 0.5 + shiftX)), -(int) (height * (graph.get(i).get(j) * scaleY - 0.5 + shiftY)));
                     }
                 }
@@ -139,6 +142,11 @@ public class GraphPanel extends ResizableJPanel {
                 g.drawString(str, (int) (wight * ((x0 + i * stepX) * scaleX + 0.5 + shiftX)) - g.getFontMetrics().stringWidth(str), -(int) (height * ((y0 + mid * stepY) * scaleY - 0.5 + shiftY)) + 15);
             }
         }
+        if(drawLine){
+            g.drawLine(xLine,0,xLine,height);
+            pointerW = ((xLine+0.0)/wight-shiftX-0.5)/(scaleX);
+        }
+
         g.setFont(new Font("TimesRoman", Font.BOLD, 14));
         g.drawString(xAxe,(this.getWidth() - g.getFontMetrics().stringWidth(xAxe))-5, this.getHeight() / 2 + 15);
         g.drawString(yAxe,(this.getWidth()/2 - g.getFontMetrics().stringWidth(yAxe))-5, 15);
@@ -152,6 +160,10 @@ public class GraphPanel extends ResizableJPanel {
         g2d.drawLine(0,0,0,height);
         g2d.drawLine(wight,0,wight,height);
         g2d.dispose();
+    }
+
+    public void addLine(int x){
+
     }
 
     private int intUp(double i){

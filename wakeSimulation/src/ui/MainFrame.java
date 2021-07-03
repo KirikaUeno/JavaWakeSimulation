@@ -1,6 +1,6 @@
 package ui;
 
-import company.Constants;
+import company.Config;
 
 import javax.swing.*;
 
@@ -12,7 +12,7 @@ public class MainFrame extends JFrame {
     }
 
     private void initializeLayout() {
-        setTitle(Constants.title);
+        setTitle(Config.title);
         ImageIcon icon = new ImageIcon("images/appIcon.jpg");
         setIconImage(icon.getImage());
 
