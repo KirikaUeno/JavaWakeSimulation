@@ -8,6 +8,8 @@ import java.util.Arrays;
 
 public class SpectrumHandling {
     private static double[] steps;
+    private static double min;
+    private static double max;
 
     public static double[] calculateSpectrum(ArrayList<Double> historySpaced){
         int size2 = historySpaced.size();
@@ -129,6 +131,11 @@ public class SpectrumHandling {
         spectrum = fitSpectrum(spectrum);
         ArrayList<Double> ans = new ArrayList<>();
         double step;
+        max=0; min=0;
+        for (int k = 1; k < spectrum.length/2; k++) {
+            max=Math.max(max,spectrum[k]);
+            min=Math.min(min,spectrum[k]);
+        }
         for (int k = 1; k < spectrum.length/2; k++) {
             step = steps[k];
             if((k+0.0)/spectrum.length>Config.lowerBorder && (k+0.0)/spectrum.length <Config.upperBorder) {
@@ -187,7 +194,7 @@ public class SpectrumHandling {
         }
         deviateP /= count1;
         //System.out.println(p+" " +sumOfa+ " "+ sum/count + " " + deviateP + " " + count);
-        return (deviateP>Config.threshold*sum/count);
+        return ((deviateP*(arr[p]-min)/(max-min)>(Config.threshold/*-Config.Zx/15*/)*sum/count) && arr[p]>-5/*+3*Math.sqrt(Config.intensity)*/);
     }
 
     private static double[] arrayMultiply(double[] arr, double a){

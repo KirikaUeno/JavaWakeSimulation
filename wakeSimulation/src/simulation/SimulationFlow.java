@@ -3,11 +3,14 @@ package simulation;
 import company.Config;
 import objects.PartPair;
 import objects.Particle;
+import org.apache.commons.math3.special.Erf;
+import org.opensourcephysics.numerics.specialfunctions.ErrorFunction;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class SimulationFlow {
     private static Particle[] particles1;
@@ -79,8 +82,8 @@ public class SimulationFlow {
         ParticlesMovement.transportBeam(particles1);
         ParticlesMovement.transportBeam(particles2);
         ParticlesMovement.beamBeam(particles1, particles2);
-        ParticlesMovement.solenoidsRotation(particles1);
-        ParticlesMovement.solenoidsRotation(particles2);
+        //ParticlesMovement.solenoidsRotation(particles1);
+        //ParticlesMovement.solenoidsRotation(particles2);
     }
 
     private static void iterationBeam() {
@@ -135,10 +138,7 @@ public class SimulationFlow {
         double py;
         double z;
         double d;
-        double shiftX = 1;
-        double shiftY = 1;
-        double shiftX1 = 2;
-        double shiftY1 = 2;
+        Random random = new Random();
         for (int i = 0; i < Config.numberOfParticles; i++) {
             double phase = i*2*Math.PI/ Config.numberOfParticles;
             x = 0;
@@ -147,7 +147,15 @@ public class SimulationFlow {
             py = 0;
             z = Config.length*Math.cos(phase);
             d = Config.length*Math.sin(phase);
-            particles1[i] =  new Particle(x, px+ 0, z, d, y, py+ 0);
+            if(Config.areBeamsGauss) {
+                x = -Math.sqrt(2) * Erf.erfcInv(2 * random.nextDouble());
+                px = -Math.sqrt(2) * Erf.erfcInv(2 * random.nextDouble());
+                y = -Math.sqrt(2) * Erf.erfcInv(2 * random.nextDouble());
+                py = -Math.sqrt(2) * Erf.erfcInv(2 * random.nextDouble());
+                z = -Config.length*Math.sqrt(2)*Erf.erfcInv(2*random.nextDouble());
+                d = -Config.length*Math.sqrt(2)*Erf.erfcInv(2*random.nextDouble());
+            }
+            particles1[i] =  new Particle(x, px+ Config.Zx, z, d, y, py+ 0);
         }
         particles1[Config.numberOfParticles/3].index = 1;
         particles2 = new Particle[Config.numberOfParticles];
@@ -159,7 +167,15 @@ public class SimulationFlow {
             py = 1*Math.sin(phase);
             z = Config.length*Math.cos(phase);
             d = Config.length*Math.sin(-phase);
-            particles2[i] = new Particle(x, px+ Config.Zx, z, d, y, py+ Config.Zy);
+            if(Config.areBeamsGauss) {
+                x = -Math.sqrt(2) * Erf.erfcInv(2 * random.nextDouble());
+                px = -Math.sqrt(2) * Erf.erfcInv(2 * random.nextDouble());
+                y = -Math.sqrt(2) * Erf.erfcInv(2 * random.nextDouble());
+                py = -Math.sqrt(2) * Erf.erfcInv(2 * random.nextDouble());
+                z = -Config.length*Math.sqrt(2)*Erf.erfcInv(2*random.nextDouble());
+                d = -Config.length*Math.sqrt(2)*Erf.erfcInv(2*random.nextDouble());
+            }
+            particles2[i] = new Particle(x, px+ Config.Zx1, z, d, y, py+ Config.Zy);
         }
         particles2[Config.numberOfParticles/3].index = 1;
         pickUpD= new ArrayList<>();
@@ -240,15 +256,17 @@ public class SimulationFlow {
             e.printStackTrace();
         }
         for (int i = 0; i < Config.intensitySteps; i++) {
-            Config.intensity = i*(Config.upperIntensity-Config.lowerIntensity)/Config.intensitySteps+Config.lowerIntensity;
-            System.out.println(Config.intensity);
+            /*Config.intensity = i*(Config.upperIntensity-Config.lowerIntensity)/Config.intensitySteps+Config.lowerIntensity;
+            System.out.println(Config.intensity);*/
+            Config.Zx = i*(Config.upperIntensity-Config.lowerIntensity)/Config.intensitySteps+Config.lowerIntensity;
+            System.out.println(Config.Zx);
             toInitialParameters();
             double[] freqs = SpectrumHandling.findFreq(countSpectrum());
             for (double freq : freqs) {
                 BufferedWriter bw = null;
                 try {
                     bw = new BufferedWriter(new FileWriter(fileName, true));
-                    bw.write(Config.intensity+" "+freq);
+                    bw.write(Config.Zx+" "+freq);
                     bw.newLine();
                     bw.flush();
                 } catch (IOException ioe) {

@@ -22,49 +22,57 @@ public class ParticleMovement {
         double dMid;
         x1mid = p.x *Math.cos(phaseX)+p.px*Math.sin(phaseX);
         px1mid = -p.x *Math.sin(phaseX)+p.px*Math.cos(phaseX);
-        y1mid = p.y *Math.cos(phaseY)+p.py*Math.sin(phaseY);
-        py1mid = -p.y *Math.sin(phaseY)+p.py*Math.cos(phaseY);
+        if(!Config.countOnlyOneDimension) {
+            y1mid = p.y * Math.cos(phaseY) + p.py * Math.sin(phaseY);
+            py1mid = -p.y * Math.sin(phaseY) + p.py * Math.cos(phaseY);
+            p.y =y1mid;
+            p.py =py1mid;
+        }
         zMid = p.z*Math.cos(phaseZ)-p.d*Math.sin(phaseZ);
         dMid = p.z*Math.sin(phaseZ)+p.d*Math.cos(phaseZ);
         p.x =x1mid;
         p.px =px1mid;
-        p.y =y1mid;
-        p.py =py1mid;
         p.z=zMid;
         p.d=dMid;
     }
 
     public static void spaceTransfer(Particle p, double z){
-        p.x += p.px * p.z;
-        p.y += p.py * p.z;
+        p.x += p.px * z;
+        if(!Config.countOnlyOneDimension) p.y += p.py * z;
     }
 
     public static void beamBeamKick(Particle p1, Particle p2){
-        double xDiffer = p1.x - p2.x;
-        double yDiffer = p1.y - p2.y;
-        p1.px -= Config.intensity * xDiffer / Config.numberOfParticles;
-        p1.py -= Config.intensity * yDiffer / Config.numberOfParticles;
-        p2.px += Config.intensity * xDiffer / Config.numberOfParticles;
-        p2.py += Config.intensity * yDiffer / Config.numberOfParticles;
+        double kick=0;
+        if(Config.countNonlinearities){
+            double xDiffer = (p1.x - p2.x)/ParticlesMovement.sizeX;
+            kick=4*Config.intensity * ((1-Math.exp(-xDiffer*xDiffer/2))/xDiffer) / Config.numberOfParticles;
+        }
+        else{
+            double xDiffer = p1.x - p2.x;
+            kick = Config.intensity * xDiffer / Config.numberOfParticles;
+        }
+        p1.px -= kick;
+        p2.px += kick;
+        if(!Config.countOnlyOneDimension) {
+            double yDiffer = p1.y - p2.y;
+            p1.py -= Config.intensity * yDiffer / Config.numberOfParticles;
+            p2.py += Config.intensity * yDiffer / Config.numberOfParticles;
+        }
     }
 
     public static void beamBeamStep(PartPair pp) {
         if(Config.isBeamBeamInSpace) {
-            spaceTransfer(pp.p1, -pp.distance / 2);
-            spaceTransfer(pp.p2, -pp.distance / 2);
-            double xDiffer = pp.p1.x - pp.p2.x;
-            double yDiffer = pp.p1.y - pp.p2.y;
-            //count beam beam p's deflections;
+            spaceTransfer(pp.p1, -(pp.distance/Config.beta) / 2);
+            spaceTransfer(pp.p2, -(pp.distance/Config.beta) / 2);
             beamBeamKick(pp.p1,pp.p2);
-            //return to initial
-            spaceTransfer(pp.p1, pp.distance / 2);
-            spaceTransfer(pp.p2, pp.distance / 2);
+            spaceTransfer(pp.p1, (pp.distance/Config.beta) / 2);
+            spaceTransfer(pp.p2, (pp.distance/Config.beta) / 2);
         } else {
-            phaseTransfer(pp.p1, -pp.distance / 2, -pp.distance / 2, 0);
-            phaseTransfer(pp.p2, -pp.distance / 2, -pp.distance / 2, 0);
+            phaseTransfer(pp.p1, -(pp.distance/Config.beta) / 2, -(pp.distance/Config.beta) / 2, 0);
+            phaseTransfer(pp.p2, -(pp.distance/Config.beta) / 2, -(pp.distance/Config.beta) / 2, 0);
             beamBeamKick(pp.p1,pp.p2);
-            phaseTransfer(pp.p1, pp.distance / 2, pp.distance / 2, 0);
-            phaseTransfer(pp.p2, pp.distance / 2, pp.distance / 2, 0);
+            phaseTransfer(pp.p1, (pp.distance/Config.beta) / 2, (pp.distance/Config.beta) / 2, 0);
+            phaseTransfer(pp.p2, (pp.distance/Config.beta) / 2, (pp.distance/Config.beta) / 2, 0);
         }
     }
 

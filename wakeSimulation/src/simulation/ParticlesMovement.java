@@ -3,16 +3,16 @@ package simulation;
 import company.Config;
 import objects.PartPair;
 import objects.Particle;
+import org.apache.commons.math3.analysis.function.Sqrt;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.*;
 
 public class ParticlesMovement {
     public static final double[] dipoleMomsX = new double[Config.numberOfParticles];
     public static final double[] dipoleMomsY = new double[Config.numberOfParticles];
     private static double dipoleMomX = 0;
     private static double dipoleMomY = 0;
+    public static double sizeX = 0;
 
     public static void transportBeam(Particle[] ps){
         if(Config.isWakeOn) {
@@ -37,38 +37,87 @@ public class ParticlesMovement {
     }
 
     public static void beamBeam(Particle[] ps1, Particle[] ps2){
+        sizeX=0;
+        double meanX=0;
+        for (Particle p : ps1) {
+            meanX+=p.x/Config.numberOfParticles;
+        }
+        for (Particle p : ps1) {
+            sizeX+=(p.x-meanX)*(p.x-meanX)/Config.numberOfParticles;
+        }
+        sizeX= Math.sqrt(sizeX);
+        double sizeX1=0;
+        meanX=0;
+        for (Particle p : ps2) {
+            meanX+=p.x/Config.numberOfParticles;
+        }
+        for (Particle p : ps2) {
+            sizeX1+=(p.x-meanX)*(p.x-meanX)/Config.numberOfParticles;
+        }
+        sizeX1= Math.sqrt(sizeX1);
+        sizeX=(sizeX1+sizeX)/2;
         if(Config.isFullBeamBeam){
             PartPair[] pairs = prepareToBeamBeam(ps1, ps2);
-            for (int i = 0; i < Config.numberOfParticles* Config.numberOfParticles; i++) {
-                ParticleMovement.beamBeamStep(pairs[i]);
+            if (Config.isBeamBeamInSpace){
+                for (Particle p : ps1) {
+                    ParticleMovement.spaceTransfer(p,p.z/Config.beta);
+                }
+                for (Particle p : ps2) {
+                    ParticleMovement.spaceTransfer(p,p.z/Config.beta);
+                }
+                for (int i = 0; i < Config.numberOfParticles* Config.numberOfParticles; i++) {
+                    ParticleMovement.beamBeamStep(pairs[i]);
+                }
+                for (Particle p : ps1) {
+                    ParticleMovement.spaceTransfer(p,-p.z/Config.beta);
+                }
+                for (Particle p : ps2) {
+                    ParticleMovement.spaceTransfer(p,-p.z/Config.beta);
+                }
+            } else {
+                for (Particle p : ps1) {
+                    ParticleMovement.phaseTransfer(p,p.z/Config.beta,p.z/Config.beta,0);
+                }
+                for (Particle p : ps2) {
+                    ParticleMovement.phaseTransfer(p,p.z/Config.beta,p.z/Config.beta,0);
+                }
+                for (int i = 0; i < Config.numberOfParticles* Config.numberOfParticles; i++) {
+                    ParticleMovement.beamBeamStep(pairs[i]);
+                }
+                for (Particle p : ps1) {
+                    ParticleMovement.phaseTransfer(p,-p.z/Config.beta,-p.z/Config.beta,0);
+                }
+                for (Particle p : ps2) {
+                    ParticleMovement.phaseTransfer(p,-p.z/Config.beta,-p.z/Config.beta,0);
+                }
             }
         } else if (Config.isBeamBeamInSpace){
             for (Particle p : ps1) {
-                ParticleMovement.spaceTransfer(p,-p.z);
+                ParticleMovement.spaceTransfer(p,-p.z/Config.beta);
             }
             for (Particle p : ps2) {
-                ParticleMovement.spaceTransfer(p,-p.z);
+                ParticleMovement.spaceTransfer(p,-p.z/Config.beta);
             }
             fullBeamBeamKick(ps1,ps2);
             for (Particle p : ps1) {
-                ParticleMovement.spaceTransfer(p,p.z);
+                ParticleMovement.spaceTransfer(p,p.z/Config.beta);
             }
             for (Particle p : ps2) {
-                ParticleMovement.spaceTransfer(p,p.z);
+                ParticleMovement.spaceTransfer(p,p.z/Config.beta);
             }
         } else {
             for (Particle p : ps1) {
-                ParticleMovement.phaseTransfer(p,-p.z,-p.z,0);
+                ParticleMovement.phaseTransfer(p,-p.z/Config.beta,-p.z/Config.beta,0);
             }
             for (Particle p : ps2) {
-                ParticleMovement.phaseTransfer(p,-p.z,-p.z,0);
+                ParticleMovement.phaseTransfer(p,-p.z/Config.beta,-p.z/Config.beta,0);
             }
             fullBeamBeamKick(ps1,ps2);
             for (Particle p : ps1) {
-                ParticleMovement.phaseTransfer(p,p.z,p.z,0);
+                ParticleMovement.phaseTransfer(p,p.z/Config.beta,p.z/Config.beta,0);
             }
             for (Particle p : ps2) {
-                ParticleMovement.phaseTransfer(p,p.z,p.z,0);
+                ParticleMovement.phaseTransfer(p,p.z/Config.beta,p.z/Config.beta,0);
             }
         }
     }
@@ -97,15 +146,38 @@ public class ParticlesMovement {
                 p.py -= Config.intensity * (p.y - ps1YSum / Config.numberOfParticles)/2;
             }
         } else {
-            for (Particle p : ps1) {
+            /*for (Particle p : ps1) {
                 p.px -= Config.intensity * (p.x - ps2XSum / Config.numberOfParticles);
                 p.py -= Config.intensity * (p.y - ps2YSum / Config.numberOfParticles);
             }
             for (Particle p : ps2) {
                 p.px -= Config.intensity * (p.x - ps1XSum / Config.numberOfParticles);
                 p.py -= Config.intensity * (p.y - ps1YSum / Config.numberOfParticles);
+            }*/
+            if(Config.countOnlyOneDimension) {
+                Arrays.stream(ps1).parallel().forEach(p->p.px -= Config.intensity * (particlesXWeightSum(p, ps2) / Config.numberOfParticles));
+                Arrays.stream(ps2).parallel().forEach(p->p.px -= Config.intensity * (particlesXWeightSum(p, ps1) / Config.numberOfParticles));
+                /*for (Particle p : ps1) {
+                    p.px -= Config.intensity * (particlesXWeightSum(p, ps2) / Config.numberOfParticles);
+                }
+                for (Particle p : ps2) {
+                    p.px -= Config.intensity * (particlesXWeightSum(p, ps1) / Config.numberOfParticles);
+                }*/
+            } else {
+                for (Particle p : ps1) {
+                    p.px -= Config.intensity * (particlesXWeightSum(p, ps2) / Config.numberOfParticles);
+                    p.py -= Config.intensity * (particlesYWeightSum(p, ps2) / Config.numberOfParticles);
+                }
+                for (Particle p : ps2) {
+                    p.px -= Config.intensity * (particlesXWeightSum(p, ps1) / Config.numberOfParticles);
+                    p.py -= Config.intensity * (particlesYWeightSum(p, ps1) / Config.numberOfParticles);
+                }
             }
         }
+    }
+
+    public static double kick(double r){
+        return (r==0)?0.5:Math.exp(-r*r/2)-(1-Math.exp(-r*r/2))/(r*r);
     }
 
     public static void solenoidsRotation(Particle[] ps){
@@ -123,6 +195,21 @@ public class ParticlesMovement {
     private static double particlesYSum(Particle[] ps){
         double sum = 0;
         for(Particle p: ps) sum+=p.y;
+        return sum;
+    }
+
+    private static double particlesXWeightSum(Particle p, Particle[] ps){
+        double sum = 0;
+        for (Particle p1: ps) {
+            sum += (p.x - p1.x) * kick(Config.alfaDivSigX * (p.z - p1.z));
+        }
+        return sum;
+    }
+    private static double particlesYWeightSum(Particle p, Particle[] ps){
+        double sum = 0;
+        for (Particle p1: ps) {
+            sum += (p.y - p1.y) * kick(Config.alfaDivSigX * (p.z - p1.z));
+        }
         return sum;
     }
 

@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="wakeSimulation">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/wakeSimulation/out/artifacts/wakeSimulation_jar/wakeSimulation.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
